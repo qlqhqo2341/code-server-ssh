@@ -10,8 +10,15 @@ RUN sed -ri 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_confi
     mkdir /run/sshd && \
     ssh-keygen -A
 
+
+RUN sed -ri 's_#!/bin/sh_#!/bin/bash_g' /usr/bin/entrypoint.sh && \
+    sed -ri '/^exec dumb/d' /usr/bin/entrypoint.sh && \
+    echo '/usr/bin/code-server "$@" &' >> /usr/bin/entrypoint.sh&& \
+    echo 'sudo /usr/sbin/sshd -D &' >> /usr/bin/entrypoint.sh&& \
+    echo 'wait -n' >> /usr/bin/entrypoint.sh
+    
+
 USER 1000
 EXPOSE 22
 
-ADD double_entrypoint.sh /usr/bin/double_entrypoint.sh
-ENTRYPOINT ["/usr/bin/double_entrypoint.sh", "--bind-addr", "0.0.0.0:8080", "."]
+ENTRYPOINT ["/usr/bin/entrypoint.sh", "--bind-addr", "0.0.0.0:8080", "."]
